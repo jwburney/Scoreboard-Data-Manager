@@ -19,6 +19,10 @@ A Python application for capturing live scoreboard data from Daktronics scoreboa
 
 ## Easy Setup (For Non-Technical Users)
 
+For Windows Users:
+There is an executable file that you can run. It should have everything you need to get started.
+
+For other users:
 If you want to create a standalone executable file (.exe) that doesn't require Python to be installed:
 
 1. **Install PyInstaller**:
