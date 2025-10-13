@@ -17,6 +17,9 @@ A Python application for capturing live scoreboard data from Daktronics scoreboa
   - Change-based updates (only when data changes)
 - **Live Preview**: View current scoreboard data and formatted output in real-time
 
+What you need:
+A DB25 Serial cable with null modem to USB. This project assumes you are coming straight out of the AllSport Controller. 
+
 ## Easy Setup (For Non-Technical Users)
 
 For Windows Users:
