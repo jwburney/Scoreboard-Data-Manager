@@ -1,0 +1,19 @@
+# Ignore everything by default
+*
+*/
+
+# But track these specific files
+!.gitignore
+!scoreBoardDataManager.py
+!scoreboard_settings.json
+
+# Track the daktronics directory and its __init__.py
+!daktronics/
+!daktronics/__init__.py
+
+# Ignore Python cache files even in tracked directories
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
