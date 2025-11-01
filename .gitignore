@@ -4,6 +4,7 @@
 
 # But track these specific files
 !.gitignore
+!README.md
 !scoreBoardDataManager.py
 !scoreboard_settings.json
 !requirements.txt
