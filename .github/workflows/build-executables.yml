@@ -1,0 +1,100 @@
+name: Build Multi-Platform Executables
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # Allows manual triggering
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_name: ScoreboardManager-Linux
+            asset_name: ScoreboardManager-Linux
+          - os: windows-latest
+            artifact_name: ScoreboardManager-Windows.exe
+            asset_name: ScoreboardManager-Windows.exe
+          - os: macos-latest
+            artifact_name: ScoreboardManager-macOS
+            asset_name: ScoreboardManager-macOS
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyinstaller pyserial obsws-python requests
+
+    - name: Build executable with PyInstaller
+      run: |
+        pyinstaller --onefile --windowed --name "${{ matrix.artifact_name }}" scoreBoardDataManager.py
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.artifact_name }}
+        path: dist/${{ matrix.artifact_name }}*
+
+  release:
+    name: Create/Update Release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
+
+    - name: Display structure of downloaded files
+      run: ls -R artifacts
+
+    - name: Delete existing release and tag
+      continue-on-error: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        gh release delete latest --repo ${{ github.repository }} --yes || true
+        git push --delete origin latest || true
+
+    - name: Create new release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: latest
+        name: Latest Build
+        body: |
+          ## Scoreboard Data Manager - Latest Build
+
+          Auto-generated executables for all platforms.
+          Built from commit: ${{ github.sha }}
+
+          ### Downloads:
+          - **Windows**: ScoreboardManager-Windows.exe
+          - **macOS**: ScoreboardManager-macOS
+          - **Linux**: ScoreboardManager-Linux
+
+          ### Installation:
+          1. Download the appropriate file for your operating system
+          2. On macOS/Linux, you may need to make it executable: `chmod +x ScoreboardManager-*`
+          3. Run the executable
+
+          **Note**: Make sure `scoreboard_settings.json` is in the same directory as the executable.
+        files: |
+          artifacts/**/*
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

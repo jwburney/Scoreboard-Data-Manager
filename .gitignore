@@ -6,10 +6,16 @@
 !.gitignore
 !scoreBoardDataManager.py
 !scoreboard_settings.json
+!requirements.txt
 
 # Track the daktronics directory and its __init__.py
 !daktronics/
 !daktronics/__init__.py
+
+# Track GitHub workflows
+!.github/
+!.github/workflows/
+!.github/workflows/*.yml
 
 # Ignore Python cache files even in tracked directories
 __pycache__/
