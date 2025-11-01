@@ -54,6 +54,9 @@ jobs:
       contents: write
 
     steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
     - name: Download all artifacts
       uses: actions/download-artifact@v4
       with:
@@ -62,16 +65,22 @@ jobs:
     - name: Display structure of downloaded files
       run: ls -R artifacts
 
+    - name: Prepare release files
+      run: |
+        mkdir -p release_files
+        find artifacts -type f -exec cp {} release_files/ \;
+        ls -lh release_files/
+
     - name: Delete existing release and tag
       continue-on-error: true
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         gh release delete latest --repo ${{ github.repository }} --yes || true
         git push --delete origin latest || true
 
     - name: Create new release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         tag_name: latest
         name: Latest Build
@@ -92,9 +101,9 @@ jobs:
           3. Run the executable
 
           **Note**: Make sure `scoreboard_settings.json` is in the same directory as the executable.
-        files: |
-          artifacts/**/*
+        files: release_files/*
         draft: false
         prerelease: false
+        fail_on_unmatched_files: false
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
