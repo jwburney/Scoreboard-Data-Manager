@@ -72,7 +72,7 @@ class ScoreboardDataManager:
         self.dak = None
         self.dak_thread = None
         self.obs_client = None
-        self.selected_fields = []  # Fields to include in output
+        self.selected_fields_by_sport = {}  # Per-sport field selections
         self.all_available_fields = []  # All fields for current sport
         
         # Configure root grid
@@ -110,7 +110,7 @@ class ScoreboardDataManager:
         self.setup_save_controls(left_frame)
         self.setup_action_buttons(left_frame)
         self.setup_data_display(right_frame)
-        self.setup_field_filter_page()
+        self.setup_data_options_page()
         
         # Status bar (must be created before load_settings)
         self.status_bar = ttk.Label(self.root, text="Ready", relief=tk.SUNKEN, anchor=tk.W)
@@ -134,12 +134,22 @@ class ScoreboardDataManager:
         
         # Sport selection
         ttk.Label(connection_frame, text="Sport:").grid(row=0, column=0, sticky=tk.W, pady=2)
-        sport_combo = ttk.Combobox(connection_frame, textvariable=self.selected_sport,
-                                  values=["football", "hockey/lacrosse", "basketball", "baseball",
-                                         "soccer", "volleyball", "waterpolo", "wrestling"],
+
+        # Build sport list: popular sports first, then remaining alphabetically
+        if DAK_AVAILABLE and dakSports:
+            popular_sports = ['football', 'basketball', 'baseball', 'soccer',
+                            'hockey/lacrosse', 'volleyball', 'wrestling', 'waterpolo']
+            all_sports = sorted(dakSports.keys())
+            other_sports = [s for s in all_sports if s not in popular_sports]
+            sport_list = popular_sports + other_sports
+        else:
+            sport_list = ['football']  # Fallback if module not loaded
+
+        self.sport_combo = ttk.Combobox(connection_frame, textvariable=self.selected_sport,
+                                  values=sport_list,
                                   state="readonly", width=23)
-        sport_combo.grid(row=0, column=1, sticky=tk.W, pady=2)
-        sport_combo.bind('<<ComboboxSelected>>', self.on_sport_changed)
+        self.sport_combo.grid(row=0, column=1, sticky=tk.W, pady=2)
+        self.sport_combo.bind('<<ComboboxSelected>>', self.on_sport_changed)
         
         # Serial port selection
         ttk.Label(connection_frame, text="Serial Port:").grid(row=1, column=0, sticky=tk.W, pady=2)
@@ -295,8 +305,8 @@ class ScoreboardDataManager:
         parent.rowconfigure(0, weight=2)
         parent.rowconfigure(1, weight=3)
     
-    def setup_field_filter_page(self):
-        """Setup the field filtering page"""
+    def setup_data_options_page(self):
+        """Setup the data options page"""
         filter_frame = ttk.Frame(self.fields_page, padding="10")
         filter_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         
@@ -348,22 +358,16 @@ class ScoreboardDataManager:
     def update_available_fields(self):
         """Update the list of available fields based on selected sport"""
         sport = self.selected_sport.get()
-        
+
         if DAK_AVAILABLE and sport in dakSports:
             self.all_available_fields = [key for key in dakSports[sport].keys() if key != 'dakSize']
         else:
             self.all_available_fields = []
-        
-        # If no fields selected yet, select all by default
-        if not self.selected_fields:
-            self.selected_fields = list(self.all_available_fields)
-        else:
-            # Keep only fields that exist in the new sport
-            self.selected_fields = [f for f in self.selected_fields if f in self.all_available_fields]
-            # If none left, select all
-            if not self.selected_fields:
-                self.selected_fields = list(self.all_available_fields)
-        
+
+        # Initialize sport in dictionary if not present, select all fields by default
+        if sport not in self.selected_fields_by_sport:
+            self.selected_fields_by_sport[sport] = list(self.all_available_fields)
+
         self.populate_field_checkboxes()
     
     def populate_field_checkboxes(self):
@@ -372,15 +376,18 @@ class ScoreboardDataManager:
         for widget in self.fields_list_frame.winfo_children():
             widget.destroy()
         self.field_checkboxes.clear()
-        
+
         if not self.all_available_fields:
             ttk.Label(self.fields_list_frame, text="No fields available for selected sport",
                      foreground="gray").pack(pady=20)
             return
-        
+
+        sport = self.selected_sport.get()
+        selected_fields = self.selected_fields_by_sport.get(sport, [])
+
         # Create checkboxes
         for field in sorted(self.all_available_fields):
-            var = tk.BooleanVar(value=field in self.selected_fields)
+            var = tk.BooleanVar(value=field in selected_fields)
             var.trace_add('write', lambda *args, f=field, v=var: self.on_field_toggled(f, v))
             cb = ttk.Checkbutton(self.fields_list_frame, text=field, variable=var)
             cb.pack(anchor=tk.W, pady=2, padx=10)
@@ -388,13 +395,19 @@ class ScoreboardDataManager:
     
     def on_field_toggled(self, field, var):
         """Called when a field checkbox is toggled"""
+        sport = self.selected_sport.get()
+
+        # Initialize sport in dictionary if not present
+        if sport not in self.selected_fields_by_sport:
+            self.selected_fields_by_sport[sport] = []
+
         if var.get():
-            if field not in self.selected_fields:
-                self.selected_fields.append(field)
+            if field not in self.selected_fields_by_sport[sport]:
+                self.selected_fields_by_sport[sport].append(field)
         else:
-            if field in self.selected_fields:
-                self.selected_fields.remove(field)
-        
+            if field in self.selected_fields_by_sport[sport]:
+                self.selected_fields_by_sport[sport].remove(field)
+
         # Save settings
         self.save_settings()
     
@@ -520,6 +533,7 @@ class ScoreboardDataManager:
             
             self.connection_status.config(text="Listening", foreground="green")
             self.connect_btn.config(text="Stop Listening")
+            self.sport_combo.config(state='disabled')
             self.port_combo.config(state='disabled')
             self.refresh_btn.config(state='disabled')
             self.save_now_btn.config(state='normal')
@@ -543,6 +557,7 @@ class ScoreboardDataManager:
         
         self.connection_status.config(text="Disconnected", foreground="red")
         self.connect_btn.config(text="Connect")
+        self.sport_combo.config(state='readonly')
         self.port_combo.config(state='readonly')
         self.refresh_btn.config(state='normal')
         self.update_status("Stopped listening")
@@ -560,10 +575,11 @@ class ScoreboardDataManager:
                 # Use lock for thread-safe access
                 with self.data_lock:
                     self.current_data = {}
-                    
-                    # Only include selected fields
-                    fields_to_use = self.selected_fields if self.selected_fields else list(self.dak.sport.keys())
-                    
+
+                    # Only include selected fields for current sport
+                    sport = self.selected_sport.get()
+                    fields_to_use = self.selected_fields_by_sport.get(sport, list(self.dak.sport.keys()))
+
                     for key in fields_to_use:
                         if key != 'dakSize' and key in self.dak.sport:
                             # Access data using dak['fieldname']
@@ -970,7 +986,16 @@ class ScoreboardDataManager:
                 self.obs_host.set(settings.get('obs_host', 'localhost'))
                 self.obs_port.set(settings.get('obs_port', '4455'))
                 self.auto_save_interval.set(settings.get('auto_save_interval', 1.0))
-                self.selected_fields = settings.get('selected_fields', [])
+
+                # Load per-sport field selections (backward compatible)
+                if 'selected_fields_by_sport' in settings:
+                    self.selected_fields_by_sport = settings.get('selected_fields_by_sport', {})
+                else:
+                    # Legacy: convert old single list to per-sport format
+                    old_fields = settings.get('selected_fields', [])
+                    if old_fields:
+                        current_sport = self.selected_sport.get()
+                        self.selected_fields_by_sport = {current_sport: old_fields}
                 
                 self.update_status("Settings loaded")
             except Exception as e:
@@ -987,7 +1012,7 @@ class ScoreboardDataManager:
                 'obs_host': self.obs_host.get(),
                 'obs_port': self.obs_port.get(),
                 'auto_save_interval': self.auto_save_interval.get(),
-                'selected_fields': self.selected_fields
+                'selected_fields_by_sport': self.selected_fields_by_sport
             }
             
             with open(self.settings_file, 'w') as f:

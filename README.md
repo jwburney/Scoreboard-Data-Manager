@@ -34,6 +34,27 @@ If you prefer to run from source code:
    python scoreBoardDataManager.py
    ```
 
+### Build Your Own Executable
+
+You can create a standalone executable for Linux, Windows, or macOS using PyInstaller. This allows you to distribute the application to others without requiring Python installation.
+
+**For Linux:**
+```bash
+chmod +x build_linux_executable.sh
+./build_linux_executable.sh
+```
+Executable will be created at: `./dist/ScoreboardDataManager`
+
+**For Windows:**
+```cmd
+build_windows_executable.bat
+```
+Executable will be created at: `.\dist\ScoreboardDataManager.exe`
+
+**Quick Reference:** See [PYINSTALLER_QUICK_GUIDE.md](PYINSTALLER_QUICK_GUIDE.md)
+
+**Detailed Guide:** See [BUILD_LINUX_EXECUTABLE.md](BUILD_LINUX_EXECUTABLE.md)
+
 ## Quick Start Guide
 
 ### 1. Connect Your Scoreboard
@@ -97,20 +118,38 @@ Go to the **Data Options** tab to choose which scoreboard fields to include in y
 
 ## Supported Sports
 
-The application supports **19 sports** with complete data field definitions:
+The application supports **20 sports** with complete data field definitions. All sports are accessible through the sport dropdown, with popular sports listed first for convenience.
 
-**Fully Tested:**
-- Football
+**Popular Sports (Listed First in Dropdown):**
+1. Football
+2. Basketball
+3. Baseball
+4. Soccer
+5. Hockey/Lacrosse
+6. Volleyball
+7. Wrestling
+8. Waterpolo
 
-**Validated (Software Testing):**
-- Basketball
-- Hockey/Lacrosse
-- Wrestling
+**Additional Sports (Alphabetically Organized):**
+- Auto Racing
+- Cricket
+- Event Counter
+- Judo
+- Karate
+- Lane Timer
+- Pitch and Speed
+- Rodeo
+- Strike Out Count
+- Taekwondo
+- Tennis
+- Track
 
-**Supported (Implementation Complete):**
-- Auto Racing, Baseball, Cricket, Event Counter, Judo, Karate, Lane Timer, Pitch and Speed, Rodeo, Soccer, Strike Out Count, Taekwondo, Tennis, Track, Volleyball, Water Polo
+**Testing Status:**
+- **Fully Tested:** Football
+- **Validated (Software Testing):** Basketball, Hockey/Lacrosse, Wrestling
+- **Supported (Implementation Complete):** All remaining sports
 
-Each sport provides access to team scores, game clock, period/quarter info, statistics, and sport-specific data.
+Each sport provides access to team scores, game clock, period/quarter info, statistics, and sport-specific data. The sport list is dynamically generated from the Daktronics library, ensuring all available sports are always accessible.
 
 ## Demo Mode
 

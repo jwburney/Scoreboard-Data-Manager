@@ -1774,7 +1774,7 @@ dakSports = {
         'Guest Digs': [588, 4],
         'Guest Total Hustle': [592, 4]
     },
-    'waterpolo': {
+    'water polo': {
         'dakSize': [1, 297],
         'Main Clock Time (mm:ss/ss.t)': [1, 5],
         'Main Clock Time (mm:ss.t)': [6, 8],
