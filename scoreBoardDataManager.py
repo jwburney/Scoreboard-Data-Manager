@@ -546,17 +546,7 @@ class ScoreboardDataManager:
     
     def stop_connection(self):
         self.is_running = False
-
-        # Close serial port if connected
-        if self.dak and hasattr(self.dak, 'dakrtd'):
-            try:
-                if hasattr(self.dak.dakrtd, 'data') and hasattr(self.dak.dakrtd.data, 'close'):
-                    self.dak.dakrtd.data.close()
-                    print("Serial port closed successfully")
-            except Exception as e:
-                print(f"Error closing serial port: {e}")
-            self.dak = None
-
+        
         # Disconnect OBS if connected
         if self.obs_client:
             try:
@@ -564,7 +554,7 @@ class ScoreboardDataManager:
             except:
                 pass
             self.obs_client = None
-
+        
         self.connection_status.config(text="Disconnected", foreground="red")
         self.connect_btn.config(text="Connect")
         self.sport_combo.config(state='readonly')
