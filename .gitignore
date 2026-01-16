@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+*.pyc
+*.pyo
+
+# PyInstaller build outputs (keep .spec files for reproducibility)
+build/
+dist/
+
+# Icon generation temporary files
+*.iconset/
+pennant.iconset/
